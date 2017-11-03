@@ -3,21 +3,35 @@ package app;
 public class ProbabilisticSearch {
 
 	static CellDetails[][] landscape;
-	static int length = 50, width = 50;
+	static int length = 10, width = 10;
+	static int rowTarget,colTarget;
 	
 	public static void main(String[] args) {
 		landscape = new CellDetails[length][width];
 		populateLandscape();
 		printLandscape();
-		
+		int count = 1;
+		while(true) {
+			int[] XY = pickNext();
+			System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+count);
+			if(chkLandscape(XY[0],XY[1])) {
+				System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+count);
+				System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+				System.out.println();
+				break;
+			} else {
+				reCalcProb(XY[0], XY[1]);
+			}
+			++count;
+		}
 	}
 	
 	public static void populateLandscape() {
 		char type;
 		double probForFind;
 		double relativeProb = (1/(length*width));
-		int rowTarget = (int) (Math.random() * length);
-		int colTarget = (int) (Math.random() * width);
+		rowTarget = (int) (Math.random() * length);
+		colTarget = (int) (Math.random() * width);
 		System.out.println("Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
 		int lCount = 0, hCount = 0, fCount = 0, cCount = 0;
 		for(int i = 0; i < length; i++) {
@@ -71,7 +85,7 @@ public class ProbabilisticSearch {
 	}
 	
 	public static boolean chkLandscape(int row, int col) {
-		if(landscape[row][col].target && landscape[row][col].probForFind <= Math.random()) {
+		if(landscape[row][col].target && landscape[row][col].probForFind >= Math.random()) {
 			return true;
 		} else {
 			return false;
@@ -94,12 +108,18 @@ public class ProbabilisticSearch {
 	}
 	
 	public static void reCalcProb(int row, int col) {
-		char type = landscape[row][col].type;
 		double relProb = landscape[row][col].relativeProb;
 		double probForFind = landscape[row][col].probForFind;
+		double overallProb = 1-relProb;
 		
-		
-		
+		for(int i=0; i<length; i++) {
+			for(int j=0; j<width; j++) {
+					if(row!=i && col!=j) {
+						landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1+((relProb*(1-probForFind)/overallProb)));
+					}
+			}
+		}
+		landscape[row][col].relativeProb = relProb*probForFind;
 	}
 	
 	static class CellDetails {
@@ -119,6 +139,4 @@ public class ProbabilisticSearch {
 			return type+"-"+probForFind;
 		}
 	}
-	
-	
 }
