@@ -15,6 +15,7 @@ public class ProbabilisticSearch {
 	public static void populateLandscape() {
 		char type;
 		double probForFind;
+		double relativeProb = (1/(length*width));
 		int rowTarget = (int) (Math.random() * length);
 		int colTarget = (int) (Math.random() * width);
 		System.out.println("Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
@@ -41,9 +42,9 @@ public class ProbabilisticSearch {
 				}
 				
 				if(rowTarget == i && colTarget == j)
-					landscape[i][j] = new CellDetails(type,probForFind,true);
+					landscape[i][j] = new CellDetails(type,probForFind,relativeProb,true);
 				else
-					landscape[i][j] = new CellDetails(type,probForFind,false);
+					landscape[i][j] = new CellDetails(type,probForFind,relativeProb,false);
 			}
 		}
 		
@@ -69,14 +70,48 @@ public class ProbabilisticSearch {
 		}
 	}
 	
+	public static boolean chkLandscape(int row, int col) {
+		if(landscape[row][col].target && landscape[row][col].probForFind <= Math.random()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static int[] pickNext() {
+		int[] XY = new int[2];
+		double nextCell=0.0;
+		for(int i=0; i<length; i++) {
+			for(int j=0; j<width; j++) {
+				if(nextCell<landscape[i][j].relativeProb) {
+					nextCell = landscape[i][j].relativeProb;
+					XY = new int[]{i,j};
+				}
+			}
+		}
+		
+		return XY;
+	}
+	
+	public static void reCalcProb(int row, int col) {
+		char type = landscape[row][col].type;
+		double relProb = landscape[row][col].relativeProb;
+		double probForFind = landscape[row][col].probForFind;
+		
+		
+		
+	}
+	
 	static class CellDetails {
 		char type;
 		double probForFind;
+		double relativeProb;
 		boolean target;
 		
-		public CellDetails(char type, double prob, boolean target) {
+		public CellDetails(char type, double prob, double relativeProb, boolean target) {
 			this.type = type;
 			this.probForFind = prob;
+			this.relativeProb = prob;
 			this.target = target;
 		}
 		
