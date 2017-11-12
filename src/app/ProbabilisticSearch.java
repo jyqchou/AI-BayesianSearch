@@ -152,14 +152,14 @@ public class ProbabilisticSearch {
 	public static void reCalcProb(int row, int col) {
 		double relProb = landscape[row][col].relativeProb;
 		double probForFind = landscape[row][col].probForFind;
-		//double overallProb = 1-relProb;
+		double overallProb = 1-relProb;
 		
 		for(int i=0; i<length; i++) {
 			for(int j=0; j<width; j++) {
 					if(row!=i && col!=j) {
-						//landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1+((relProb*(1-probForFind)/overallProb)));
 						landscape[i][j].probBeliefOverTime[currentSearch] = landscape[i][j].relativeProb;
-						landscape[i][j].relativeProb = landscape[i][j].relativeProb + (double)relProb*(1.0-probForFind)/(length*width - 1);
+						landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1+((relProb*(1-probForFind)/overallProb)));
+						//landscape[i][j].relativeProb = landscape[i][j].relativeProb + (double)relProb*(1.0-probForFind)/(length*width - 1);
 						//given the target was not found in the searched cell
 						//and the probability of finding the target if the target was in the cell,
 						//evenly distributes the decrease in probability of the searched cell among the other cells 
