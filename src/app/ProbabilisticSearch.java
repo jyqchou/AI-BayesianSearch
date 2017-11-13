@@ -19,21 +19,30 @@ C - Maze of Caves
 
 package app;
 
+import java.util.ArrayList;
+
 public class ProbabilisticSearch {
 
+	static boolean moving = true;
 	static CellDetails[][] landscape; //Data Structure containing the grid of land
-	static int length = 10, width = 10; //length and width of the grid
+	static int dimension = 50; //length and width of the grid
 	static int rowTarget, colTarget; //row and column in which the target is located
-	static int maximumSearchTime = length*width*100;
+	static int maximumSearchTime = dimension*dimension*52;
 	static int currentSearch;
+	static String targetMove = "";
 	
 	public static void main(String[] args) {
-		landscape = new CellDetails[length][width];
+		landscape = new CellDetails[dimension][dimension];
 		populateLandscape();
 		printLandscape();
 		currentSearch = 1;
 		while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
-			int[] XY = pickNext();
+			int[] XY;
+			if(moving)
+				XY = pickMovingNext();
+			else
+				XY = pickNext();
+			
 			System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
 			if(chkLandscape(XY[0],XY[1])) {
 				System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
@@ -45,6 +54,9 @@ public class ProbabilisticSearch {
 			}
 			++currentSearch;
 		}
+		if(currentSearch >= maximumSearchTime) {
+			System.out.println("Couldn't find the target after "+maximumSearchTime+" number of moves..");
+		}
 	}
 	
 	/*
@@ -53,13 +65,13 @@ public class ProbabilisticSearch {
 	public static void populateLandscape() {
 		char type;
 		double probForFind;
-		double relativeProb = (double)(1.0/(length*width));
-		rowTarget = (int) (Math.random() * length);
-		colTarget = (int) (Math.random() * width);
+		double relativeProb = (double)(1.0/(dimension*dimension));
+		rowTarget = (int) (Math.random() * (dimension-1));
+		colTarget = (int) (Math.random() * (dimension-1));
 		System.out.println("Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
 		int lCount = 0, hCount = 0, fCount = 0, cCount = 0;
-		for(int i = 0; i < length; i++) {
-			for(int j=0; j < width; j++) {
+		for(int i = 0; i < dimension; i++) {
+			for(int j=0; j < dimension; j++) {
 				double rand = Math.random();
 				if(rand <= 0.2) {
 					type = 'L';	// Flat Land
@@ -96,21 +108,21 @@ public class ProbabilisticSearch {
 	 */
 	public static void printLandscape() {	
 		System.out.print("   ");
-		for(int i = 0; i < width; i++) {
+		for(int i = 0; i < dimension; i++) {
 			if(i < 10)
 				System.out.print((i+1)+"      ");
 			else
 				System.out.print((i+1)+"     ");
 		}
 		System.out.println();
-		for(int i = 0; i < length; i++) {
+		for(int i = 0; i < dimension; i++) {
 			if(i < 9){
 				System.out.print((i+1)+"  ");	
 			} else {
 				System.out.print((i+1)+" ");
 			}
 			
-			for(int j=0; j < width; j++) {
+			for(int j=0; j < dimension; j++) {
 				System.out.print(landscape[i][j].toString()+"  ");
 			}
 			System.out.println();
@@ -134,8 +146,8 @@ public class ProbabilisticSearch {
 	public static int[] pickNext() {
 		int[] XY = new int[2];
 		double nextCell=0.0;
-		for(int i=0; i<length; i++) {
-			for(int j=0; j<width; j++) {
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
 				//System.out.println(landscape[i][j].relativeProb[currentSearch-1]);
 				if(nextCell < landscape[i][j].relativeProb) {
 					nextCell = landscape[i][j].relativeProb;
@@ -146,6 +158,154 @@ public class ProbabilisticSearch {
 		return XY;
 	}
 	
+	public static int[] pickMovingNext() {
+		int[] XY = new int[2];
+		String move = move();
+		XY = getNext(move);
+		
+		return XY;
+	}
+	
+	public static int[] getNext(String move) {
+		int[] XY = new int[2];
+		
+		if(targetMove == "") {
+			targetMove = move;
+		} else {
+			targetMove += "-"+move.split("-")[1];
+		}
+		System.out.println("Move "+move+"  -  "+targetMove);
+		String[] trackTarget = targetMove.split("-");
+		int i=0;
+		ArrayList<int[]> location = find(trackTarget[i]);
+		while(! location.isEmpty() && ++i<trackTarget.length) {
+			location = findNext(trackTarget,location,i);
+		}
+		
+		for(int j=0; j<location.size(); j++) {
+			if(j == 0) {
+				XY = location.get(0);
+			}
+			int[] loc = new int[2];
+			loc = location.get(j);
+			
+			if(landscape[XY[0]][XY[1]].relativeProb < landscape[loc[0]][loc[1]].relativeProb) {
+				XY = loc;
+			}
+		}
+		
+		return XY;
+	}
+	
+	public static ArrayList<int[]> find(String locate) {
+		ArrayList<int[]> loc = new ArrayList<int[]>();
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
+				if(landscape[i][j].type == locate.charAt(0)){
+					loc.add(new int[] {i,j});
+				}
+			}
+		}
+		
+		return loc;
+	}
+	
+	public static ArrayList<int[]> findNext(String[] trackTarget, ArrayList<int[]> location, int pos) {
+		ArrayList<int[]> targetLoc = new ArrayList<int[]>();
+		char type = trackTarget[pos].charAt(0);
+		
+		for(int i=0; i<location.size(); i++) {
+			int row = location.get(i)[0];
+			int col = location.get(i)[1];
+			
+			if(row>0 && landscape[row-1][col].type == type) {
+				targetLoc.add(new int[] {row-1,col});
+			} 
+			if(row<dimension-1 && landscape[row+1][col].type == type) {
+				targetLoc.add(new int[] {row+1,col});
+			} 
+			if(col>0 && landscape[row][col-1].type == type) {
+				targetLoc.add(new int[] {row,col-1});
+			} 
+			if(col<dimension-1 && landscape[row][col+1].type == type) {
+				targetLoc.add(new int[] {row,col+1});
+			}
+		}
+		
+		return targetLoc;
+	}
+	public static String move() {
+		
+		double rand = Math.random();
+		int tempCol=colTarget, tempRow=rowTarget;
+		
+		if(rowTarget > 0 && rowTarget < dimension-1 && colTarget > 0 && colTarget < dimension-1) {
+			if(rand <= 0.25) {
+				tempRow = rowTarget-1;
+			} else if(rand > 0.25 && rand <= 0.5) {
+				tempCol = colTarget-1;
+			} else if(rand > 0.5 && rand <= 0.75) {
+				tempCol = colTarget+1;
+			} else if(rand > 0.75 ) {
+				tempRow = rowTarget+1;
+			}
+		} else if(rowTarget > 0 && rowTarget < dimension-1) {
+			if(rand <= 0.33 && colTarget == 0) {
+				tempCol = colTarget+1;
+			} else if(rand <= 0.33 && colTarget == dimension-1) {
+				tempCol = colTarget-1;
+			} else if(rand > 0.33 && rand <= 0.66) {
+				tempRow = rowTarget-1;
+			} else {
+				tempRow = rowTarget+1;
+			}
+		} else if(colTarget > 0 && colTarget < dimension-1) {
+			if(rand <= 0.33 && rowTarget == 0) {
+				tempRow = rowTarget+1;
+			} else if(rand <= 0.33 && rowTarget == dimension-1) {
+				tempRow = rowTarget-1;
+			} else if(rand > 0.33 && rand <= 0.66) {
+				tempCol = colTarget-1;
+			} else {
+				tempCol = colTarget+1;
+			}
+		} else {
+			if(rowTarget == 0 && colTarget == 0) {
+				if(rand <= 0.5) {
+					tempRow = rowTarget+1;
+				} else {
+					tempCol = colTarget+1;
+				}
+			} else if(rowTarget == 0 && colTarget == dimension-1) {
+				if(rand <= 0.5) {
+					tempRow = rowTarget+1;
+				} else {
+					tempCol = colTarget-1;
+				}
+			} else if(rowTarget == dimension-1 && colTarget == 0) {
+				if(rand <= 0.5) {
+					tempRow = rowTarget-1;
+				} else {
+					tempCol = colTarget+1;
+				}
+			} else {
+				if(rand <= 0.5) {
+					tempRow = rowTarget-1;
+				} else {
+					tempCol = colTarget-1;
+				}
+			}
+		}
+		
+		landscape[rowTarget][colTarget].target = false;
+		char initialType = landscape[rowTarget][colTarget].type;
+		rowTarget = tempRow; colTarget = tempCol;
+		landscape[rowTarget][colTarget].target = true;
+		char finalType = landscape[rowTarget][colTarget].type;
+		System.out.println("Moved :: "+(rowTarget+1)+"-"+(colTarget+1));
+		return initialType+"-"+finalType;
+	}
+	
 	/*
 	 * Function to recalculate relative probabilities of containing the target after a search has completed 
 	 */
@@ -154,8 +314,8 @@ public class ProbabilisticSearch {
 		double probForFind = landscape[row][col].probForFind;
 		double overallProb = 1-relProb;
 		
-		for(int i=0; i<length; i++) {
-			for(int j=0; j<width; j++) {
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
 					if(row!=i && col!=j) {
 						landscape[i][j].probBeliefOverTime[currentSearch] = landscape[i][j].relativeProb;
 						landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1+((relProb*(1-probForFind)/overallProb)));
