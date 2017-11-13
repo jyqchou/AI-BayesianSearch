@@ -20,6 +20,7 @@ C - Maze of Caves
 package app;
 
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class ProbabilisticSearch {
 
@@ -27,8 +28,8 @@ public class ProbabilisticSearch {
 	static CellDetails[][] landscape; //Data Structure containing the grid of land
 	static int dimension = 50; //length and width of the grid
 	static int rowTarget, colTarget; //row and column in which the target is located
-	static int maximumSearchTime = dimension*dimension*52;
-	static int currentSearch;
+	static int maximumSearchTime = dimension*dimension*52; //upperbound for maximum number of searches
+	static int currentSearch; //current search iteration
 	static String targetMove = "";
 	
 	public static void main(String[] args) {
@@ -36,27 +37,49 @@ public class ProbabilisticSearch {
 		populateLandscape();
 		printLandscape();
 		currentSearch = 1;
-		while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
-			int[] XY;
-			if(moving)
-				XY = pickMovingNext();
-			else
-				XY = pickNext();
-			
-			System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
-			if(chkLandscape(XY[0],XY[1])) {
-				System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
-				System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
-				System.out.println();
-				break;
-			} else {
-				reCalcProb(XY[0], XY[1]);
+		
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter 1 for Stationary Target, enter 2 for Moving Target, enter any other number to quit");
+		int option = in.nextInt();
+		if (option == 1) {
+			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+				int[] XY = pickNext();
+				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+				if(chkLandscape(XY[0],XY[1])) {
+					System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+					System.out.println();
+					break;
+				} else {
+					reCalcProb(XY[0], XY[1]);
+				}
+				++currentSearch;
 			}
-			++currentSearch;
+			
+		} else if (option == 2) {
+			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+				int[] XY;
+				if(moving)
+					XY = pickMovingNext();
+				else
+					XY = pickNext();
+				
+				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+				if(chkLandscape(XY[0],XY[1])) {
+					System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+					System.out.println();
+					break;
+				} else {
+					reCalcProb(XY[0], XY[1]);
+				}
+				++currentSearch;
+			}	
 		}
 		if(currentSearch >= maximumSearchTime) {
 			System.out.println("Couldn't find the target after "+maximumSearchTime+" number of moves..");
 		}
+
 	}
 	
 	/*
