@@ -79,6 +79,7 @@ public class ProbabilisticSearch {
 		if(currentSearch >= maximumSearchTime) {
 			System.out.println("Couldn't find the target after "+maximumSearchTime+" number of moves..");
 		}
+		in.close();
 
 	}
 	
