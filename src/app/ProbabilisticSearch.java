@@ -33,14 +33,18 @@ public class ProbabilisticSearch {
 	static String targetMove = "";
 	
 	public static void main(String[] args) {
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter 1 for Stationary Target, enter 2 for Moving Target, enter any other number to quit");
+		int option = in.nextInt();
+		if (!(option == 1 || option == 2)){
+			System.exit(0);
+		}
+		
 		landscape = new CellDetails[dimension][dimension];
 		populateLandscape();
 		printLandscape();
 		currentSearch = 1;
 		
-		Scanner in = new Scanner(System.in);
-		System.out.println("Enter 1 for Stationary Target, enter 2 for Moving Target, enter any other number to quit");
-		int option = in.nextInt();
 		if (option == 1) {
 			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
 				int[] XY = pickNext();
@@ -75,7 +79,8 @@ public class ProbabilisticSearch {
 				}
 				++currentSearch;
 			}	
-		}
+		} 
+		
 		if(currentSearch >= maximumSearchTime) {
 			System.out.println("Couldn't find the target after "+maximumSearchTime+" number of moves..");
 		}
