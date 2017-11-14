@@ -34,6 +34,7 @@ public class ProbabilisticSearch {
 	static String targetMove = "";
 	static int[] currentLocation;
 	static int distanceTraveled;
+	static int numTrials = 100;
 	
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
@@ -51,10 +52,11 @@ public class ProbabilisticSearch {
 		if (option == 3){ //Simulate 100 grids for each Rule, calculate average number of searches
 			int rule1Count = 0;
 			int rule2Count = 0;
-			int total1 = 100;
-			int total2 = 100;
+			int locationCount = 0;
+			int distanceCount = 0;
 			
-			for (int i = 0; i<100; i++) {
+			
+			for (int i = 0; i<numTrials; i++) {
 				System.out.println("Rule 1, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
 				populateLandscape();
@@ -70,18 +72,13 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-//				if (currentSearch < maximumSearchTime) {
-					System.out.println("Search Time: " + currentSearch);
-					rule1Count = rule1Count + currentSearch;
-//				} else {
-//					System.out.println("Search Time exceeded.");
-//					total1 = total1-1;
-//				}
+				System.out.println("Search Time: " + currentSearch);
+				rule1Count = rule1Count + currentSearch;
 			}
 
 			currentSearch = 1;
 			
-			for (int i = 0; i< 100; i++) {
+			for (int i = 0; i< numTrials; i++) {
 				System.out.println("Rule 2, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
 				populateLandscape();
@@ -98,17 +95,40 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-//				if (currentSearch < maximumSearchTime) {
-					System.out.println("Search Time: " + currentSearch);
-					rule2Count = rule2Count + currentSearch;
-//				} else {
-//					System.out.println("Search Time exceeded.");
-//					total2 = total2-1;
-//				}
+				System.out.println("Search Time: " + currentSearch);
+				rule2Count = rule2Count + currentSearch;
 			}
 			
-			System.out.println("Rule 1 Average: " + (double)rule1Count/1000);
-			System.out.println("Rule 2 Average: " + (double)rule2Count/1000);
+			currentSearch = 1;
+			for (int i = 0; i<numTrials; i++) {
+				System.out.println("Location Based Action, iteration: " + (i+1));
+				landscape = new CellDetails[dimension][dimension];
+				populateLandscape();
+				currentSearch = 1;
+				currentLocation = new int[]{0, 0};
+				distanceTraveled = 0;
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY;
+					XY = pickNextCurrentLocation();
+					
+					if(chkLandscape(XY[0],XY[1])) {
+						break;
+					} else {
+						reCalcProb(XY[0], XY[1]);
+					}
+					++currentSearch;
+				}
+				
+				System.out.println("Search Time + Distance Traveled = " + currentSearch + " + " + distanceTraveled + " = " + (currentSearch+distanceTraveled));
+				locationCount = locationCount + currentSearch;
+				distanceCount = distanceCount + distanceTraveled;
+				
+			}
+			
+			System.out.println("Rule 1 Average: " + (double)rule1Count/numTrials);
+			System.out.println("Rule 2 Average: " + (double)rule2Count/numTrials);
+			System.out.println("Location Based Search Average: " + (double)locationCount/numTrials + " + " + (double)distanceCount/numTrials + " = "  +  ((double)locationCount/numTrials + (double)distanceCount/numTrials));
 			System.exit(0);
 			
 		} 
@@ -337,7 +357,7 @@ public class ProbabilisticSearch {
 	public static int[] pickNextCurrentLocation() {
 		int XY[] = new int[2];
 		double nextCell = 0.0;
-		int distance = 0;
+		double distance = 0.0;
 		int d = 0;
 		
 		//nextCell = (landscape[0][0].relativeProb - landscape[0][0].relativeProb * (1-landscape[0][0].probForFind) / (distance+1));
@@ -345,10 +365,12 @@ public class ProbabilisticSearch {
 			for (int j=0; j<dimension; j++) {
 				distance = Math.abs((i-currentLocation[0])) + Math.abs((j-currentLocation[1]));
 				
-				if(nextCell < (landscape[i][j].relativeProb * Math.pow(landscape[i][j].probForFind, (distance+1)) / (distance+1))){
-					nextCell = (landscape[i][j].relativeProb * Math.pow(landscape[i][j].probForFind, (distance+1)) / (distance+1));
+				if(nextCell < (landscape[i][j].relativeProb * landscape[i][j].probForFind / (distance + 1.0))) { 
+				// Math.pow(landscape[i][j].probForFind, (distance)) / (distance-1.0))){
+					nextCell = (landscape[i][j].relativeProb * landscape[i][j].probForFind / (distance + 1.0)); 
+				//Math.pow(landscape[i][j].probForFind, (distance)) / (distance-1.0));
 					XY = new int[]{i,j};
-					d = distance;
+					d = (int)distance;
 				}
 			}
 		}
