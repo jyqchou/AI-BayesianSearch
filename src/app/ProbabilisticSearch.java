@@ -26,6 +26,7 @@ public class ProbabilisticSearch {
 
 	static boolean moving = true;
 	static CellDetails[][] landscape; //Data Structure containing the grid of land
+	static double[][] findingTargetProb;
 	static int dimension = 50; //length and width of the grid
 	static int rowTarget, colTarget; //row and column in which the target is located
 	static int maximumSearchTime = dimension*dimension*52; //upperbound for maximum number of searches
@@ -34,11 +35,81 @@ public class ProbabilisticSearch {
 	
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
-		System.out.println("Enter 1 for Stationary Target, enter 2 for Moving Target, enter any other number to quit");
+		System.out.println("Enter 1 for Stationary Target, Enter 2 for Moving Target, Enter 3 for Simulation, Enter any other number to quit.");
 		int option = in.nextInt();
-		if (!(option == 1 || option == 2)){
+		int option2 = 0;
+		if (!(option == 1 || option == 2 || option == 3)){
 			System.exit(0);
 		}
+		if (option == 1) {
+			System.out.println("Enter 1 for Rule 1, Enter 2 for Rule 2, Enter any other number to quit.");
+			option2 = in.nextInt();
+		}
+		
+		if (option == 3){ //Simulate 100 grids for each Rule, calculate average number of searches
+			int rule1Count = 0;
+			int rule2Count = 0;
+			int total1 = 100;
+			int total2 = 100;
+			
+			for (int i = 0; i<100; i++) {
+				System.out.println("Rule 1, iteration: " + (i+1));
+				landscape = new CellDetails[dimension][dimension];
+				populateLandscape();
+				currentSearch = 1;
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY = pickNext();
+					if(chkLandscape(XY[0],XY[1])) {
+						break;
+					} else {
+						reCalcProb(XY[0], XY[1]);
+					}
+					++currentSearch;
+				}
+				
+				if (currentSearch < maximumSearchTime) {
+					System.out.println("Search Time: " + currentSearch);
+					rule1Count = rule1Count + currentSearch;
+				} else {
+					System.out.println("Search Time exceeded.");
+					total1 = total1-1;
+				}
+			}
+
+			currentSearch = 1;
+			
+			for (int i = 0; i< 100; i++) {
+				System.out.println("Rule 2, iteration: " + (i+1));
+				landscape = new CellDetails[dimension][dimension];
+				populateLandscape();
+				currentSearch = 1;
+				findingTargetProb = new double[dimension][dimension];
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY = pickNextRule2();
+					if(chkLandscape(XY[0],XY[1])) {
+						break;
+					} else {
+						reCalcProb(XY[0], XY[1]);
+					}
+					++currentSearch;
+				}
+				
+				if (currentSearch < maximumSearchTime) {
+					System.out.println("Search Time: " + currentSearch);
+					rule2Count = rule2Count + currentSearch;
+				} else {
+					System.out.println("Search Time exceeded.");
+					total2 = total2-1;
+				}
+			}
+			
+			System.out.println("Rule 1 Average: " + (double)rule1Count/1000);
+			System.out.println("Rule 2 Average: " + (double)rule2Count/1000);
+			System.exit(0);
+			
+		} 
 		
 		landscape = new CellDetails[dimension][dimension];
 		populateLandscape();
@@ -46,18 +117,39 @@ public class ProbabilisticSearch {
 		currentSearch = 1;
 		
 		if (option == 1) {
-			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
-				int[] XY = pickNext();
-				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
-				if(chkLandscape(XY[0],XY[1])) {
-					System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
-					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
-					System.out.println();
-					break;
-				} else {
-					reCalcProb(XY[0], XY[1]);
+			if (option2 == 1) {
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY = pickNext();
+					System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+					if(chkLandscape(XY[0],XY[1])) {
+						System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+						System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+						System.out.println();
+						break;
+					} else {
+						reCalcProb(XY[0], XY[1]);
+					}
+					++currentSearch;
 				}
-				++currentSearch;
+			} else if (option2 == 2) {
+				findingTargetProb = new double[dimension][dimension];
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY = pickNextRule2();
+					System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+					if(chkLandscape(XY[0],XY[1])) {
+						System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+						System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+						System.out.println();
+						break;
+					} else {
+						reCalcProb(XY[0], XY[1]);
+					}
+					++currentSearch;
+				}
+				
+			} else {
+				System.exit(0);
 			}
 			
 		} else if (option == 2) {
@@ -180,6 +272,31 @@ public class ProbabilisticSearch {
 				//System.out.println(landscape[i][j].relativeProb[currentSearch-1]);
 				if(nextCell < landscape[i][j].relativeProb) {
 					nextCell = landscape[i][j].relativeProb;
+					XY = new int[]{i,j};
+				}
+			}
+		}
+		return XY;
+	}
+	
+	public static int[] pickNextRule2() {
+		int[] XY = new int[2];
+		double nextCell=0.0;
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
+				double scale = 0.0;
+				if (landscape[i][j].type == 'L') {
+					scale = 0.9; 
+				} else if (landscape[i][j].type == 'H') {
+					scale = 0.7;
+				} else if (landscape[i][j].type == 'F') {
+					scale = 0.3;
+				} else if (landscape[i][j].type == 'C') {
+					scale = 0.1;
+				}
+				findingTargetProb[i][j] = scale*landscape[i][j].relativeProb;
+				if(nextCell < findingTargetProb[i][j]) {
+					nextCell = findingTargetProb[i][j];
 					XY = new int[]{i,j};
 				}
 			}
