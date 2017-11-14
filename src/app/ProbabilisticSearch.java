@@ -32,13 +32,15 @@ public class ProbabilisticSearch {
 	static int maximumSearchTime = dimension*dimension*52; //upperbound for maximum number of searches
 	static int currentSearch; //current search iteration
 	static String targetMove = "";
+	static int[] currentLocation;
+	static int distanceTraveled;
 	
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
-		System.out.println("Enter 1 for Stationary Target, Enter 2 for Moving Target, Enter 3 for Simulation, Enter any other number to quit.");
+		System.out.println("Enter 1 for Stationary Target, Enter 2 for Moving Target, Enter 3 for Simulation, Enter 4 for Current Location Search, Enter any other number to quit.");
 		int option = in.nextInt();
 		int option2 = 0;
-		if (!(option == 1 || option == 2 || option == 3)){
+		if (!(option == 1 || option == 2 || option == 3 || option == 4)){
 			System.exit(0);
 		}
 		if (option == 1) {
@@ -68,13 +70,13 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				if (currentSearch < maximumSearchTime) {
+//				if (currentSearch < maximumSearchTime) {
 					System.out.println("Search Time: " + currentSearch);
 					rule1Count = rule1Count + currentSearch;
-				} else {
-					System.out.println("Search Time exceeded.");
-					total1 = total1-1;
-				}
+//				} else {
+//					System.out.println("Search Time exceeded.");
+//					total1 = total1-1;
+//				}
 			}
 
 			currentSearch = 1;
@@ -96,13 +98,13 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				if (currentSearch < maximumSearchTime) {
+//				if (currentSearch < maximumSearchTime) {
 					System.out.println("Search Time: " + currentSearch);
 					rule2Count = rule2Count + currentSearch;
-				} else {
-					System.out.println("Search Time exceeded.");
-					total2 = total2-1;
-				}
+//				} else {
+//					System.out.println("Search Time exceeded.");
+//					total2 = total2-1;
+//				}
 			}
 			
 			System.out.println("Rule 1 Average: " + (double)rule1Count/1000);
@@ -171,7 +173,29 @@ public class ProbabilisticSearch {
 				}
 				++currentSearch;
 			}	
-		} 
+		} else if (option == 4) {
+			currentLocation = new int[]{0, 0};
+			distanceTraveled = 0;
+			
+			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+				int[] XY;
+				XY = pickNextCurrentLocation();
+				
+				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+				if(chkLandscape(XY[0],XY[1])) {
+					System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+					System.out.println();
+					break;
+				} else {
+					reCalcProb(XY[0], XY[1]);
+				}
+				++currentSearch;
+			}
+			
+			System.out.println("Total number of searaches: " + currentSearch + " + " + distanceTraveled + " = " + (currentSearch + distanceTraveled));
+			
+		}
 		
 		if(currentSearch >= maximumSearchTime) {
 			System.out.println("Couldn't find the target after "+maximumSearchTime+" number of moves..");
@@ -279,21 +303,24 @@ public class ProbabilisticSearch {
 		return XY;
 	}
 	
+	/*
+	 * Function to find the cell with the greatest likelihood of finding the target cell after searching
+	 */
 	public static int[] pickNextRule2() {
 		int[] XY = new int[2];
 		double nextCell=0.0;
 		for(int i=0; i<dimension; i++) {
 			for(int j=0; j<dimension; j++) {
-				double scale = 0.0;
-				if (landscape[i][j].type == 'L') {
-					scale = 0.9; 
-				} else if (landscape[i][j].type == 'H') {
-					scale = 0.7;
-				} else if (landscape[i][j].type == 'F') {
-					scale = 0.3;
-				} else if (landscape[i][j].type == 'C') {
-					scale = 0.1;
-				}
+				double scale = landscape[i][j].probForFind;
+//				if (landscape[i][j].type == 'L') {
+//					scale = 0.9; 
+//				} else if (landscape[i][j].type == 'H') {
+//					scale = 0.7;
+//				} else if (landscape[i][j].type == 'F') {
+//					scale = 0.3;
+//				} else if (landscape[i][j].type == 'C') {
+//					scale = 0.1;
+//				}
 				findingTargetProb[i][j] = scale*landscape[i][j].relativeProb;
 				if(nextCell < findingTargetProb[i][j]) {
 					nextCell = findingTargetProb[i][j];
@@ -304,6 +331,37 @@ public class ProbabilisticSearch {
 		return XY;
 	}
 	
+	/*
+	 * Function to find the next cell with the greatest likelihood of containing the target cell while considering distance needed to travel
+	 */
+	public static int[] pickNextCurrentLocation() {
+		int XY[] = new int[2];
+		double nextCell = 0.0;
+		int distance = 0;
+		int d = 0;
+		
+		//nextCell = (landscape[0][0].relativeProb - landscape[0][0].relativeProb * (1-landscape[0][0].probForFind) / (distance+1));
+		for (int i=0; i<dimension; i++) {
+			for (int j=0; j<dimension; j++) {
+				distance = Math.abs((i-currentLocation[0])) + Math.abs((j-currentLocation[1]));
+				
+				if(nextCell < (landscape[i][j].relativeProb * Math.pow(landscape[i][j].probForFind, (distance+1)) / (distance+1))){
+					nextCell = (landscape[i][j].relativeProb * Math.pow(landscape[i][j].probForFind, (distance+1)) / (distance+1));
+					XY = new int[]{i,j};
+					d = distance;
+				}
+			}
+		}
+		currentLocation[0] = XY[0];
+		currentLocation[1] = XY[1];
+		distanceTraveled = distanceTraveled + d;
+		return XY;
+				
+	}
+	
+	/*
+	 * Function to move the target and return the next cell
+	 */
 	public static int[] pickMovingNext() {
 		int[] XY = new int[2];
 		String move = move();
@@ -312,6 +370,9 @@ public class ProbabilisticSearch {
 		return XY;
 	}
 	
+	/*
+	 * Function to get the next cell to search based on moving information
+	 */
 	public static int[] getNext(String move) {
 		int[] XY = new int[2];
 		
@@ -380,6 +441,10 @@ public class ProbabilisticSearch {
 		
 		return targetLoc;
 	}
+	
+	/*
+	 * Function to randomly move the target Cell & report the moves
+	 */
 	public static String move() {
 		
 		double rand = Math.random();
