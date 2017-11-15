@@ -28,15 +28,16 @@ public class ProbabilisticSearch {
 	static double[][] findingTargetProb;
 	static int dimension = 50; //length and width of the grid
 	static int rowTarget, colTarget; //row and column in which the target is located
-	static int maximumSearchTime = dimension*dimension*52; //upperbound for maximum number of searches
+	static int maximumSearchTime = dimension*dimension*1000; //upperbound for maximum number of searches
 	static int currentSearch; //current search iteration
 	static String targetMove = "";
 	static int[] currentLocation;
 	static int distanceTraveled;
-	static int numTrials = 100;
+	static int numTrials = 500;
 	
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
+		
 		System.out.println("Enter 1 for Stationary Target\nEnter 2 for Moving Target\nEnter 3 for Simulation\nEnter 4 for Current Location Search\nEnter any other number to quit.");
 		int option = in.nextInt();
 		int option2 = 0;
@@ -141,7 +142,10 @@ public class ProbabilisticSearch {
 			if (option2 == 1) {
 				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
 					int[] XY = pickNext();
-					System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+					System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch + " Land Type: " + landscape[XY[0]][XY[1]].type + " Relative Probability: " + landscape[XY[0]][XY[1]].relativeProb);
+					//System.out.println("Relative Prob of [0][0]: " + landscape[0][0].relativeProb);
+					//if (landscape[0][0].relativeProb < 0 ) System.exit(0);
+					//System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1) + " Land Type: " + landscape[rowTarget][colTarget].type);
 					if(chkLandscape(XY[0],XY[1])) {
 						System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
 						System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
@@ -227,8 +231,8 @@ public class ProbabilisticSearch {
 		char type;
 		double probForFind;
 		double relativeProb = (double)(1.0/(dimension*dimension));
-		rowTarget = (int) (Math.random() * (dimension-1));
-		colTarget = (int) (Math.random() * (dimension-1));
+		rowTarget = (int) Math.floor(Math.random() * (dimension));
+		colTarget = (int) Math.floor(Math.random() * (dimension));
 		System.out.println("Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
 		int lCount = 0, hCount = 0, fCount = 0, cCount = 0;
 		for(int i = 0; i < dimension; i++) {
@@ -310,7 +314,7 @@ public class ProbabilisticSearch {
 		for(int i=0; i<dimension; i++) {
 			for(int j=0; j<dimension; j++) {
 				//System.out.println(landscape[i][j].relativeProb[currentSearch-1]);
-				if(nextCell < landscape[i][j].relativeProb) {
+				if(nextCell < landscape[i][j].relativeProb || nextCell == 0.0) {
 					nextCell = landscape[i][j].relativeProb;
 					XY = new int[]{i,j};
 				}
@@ -545,10 +549,10 @@ public class ProbabilisticSearch {
 		
 		for(int i=0; i<dimension; i++) {
 			for(int j=0; j<dimension; j++) {
-					if(row!=i && col!=j) {
+					if(row!=i || col!=j) {
 						//landscape[i][j].probBeliefOverTime[currentSearch] = landscape[i][j].relativeProb;
-						landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1+((relProb*(1-probForFind)/overallProb)));
-						//landscape[i][j].relativeProb = (1.0-relProb*probForFind)*landscape[i][j].relativeProb/overallProb;
+						//landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1.0+((relProb*(1.0-probForFind)/overallProb)));
+						landscape[i][j].relativeProb = landscape[i][j].relativeProb + (relProb*probForFind)*(landscape[i][j].relativeProb/overallProb);
 						//given the target was not found in the searched cell
 						//and the probability of finding the target if the target was in the cell,
 						//evenly distributes the decrease in probability of the searched cell among the other cells 
@@ -556,7 +560,7 @@ public class ProbabilisticSearch {
 			}
 		}
 		//landscape[row][col].probBeliefOverTime[currentSearch] = landscape[row][col].relativeProb;
-		landscape[row][col].relativeProb = relProb*(1-probForFind);
+		landscape[row][col].relativeProb = relProb*(1.0-probForFind);
 	}
 	
 	/*
