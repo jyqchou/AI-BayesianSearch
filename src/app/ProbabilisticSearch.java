@@ -257,7 +257,7 @@ public class ProbabilisticSearch {
 				else
 					landscape[i][j] = new CellDetails(type,probForFind,relativeProb,false);
 				
-				landscape[i][j].probBeliefOverTime[0] = landscape[i][j].relativeProb;
+				//landscape[i][j].probBeliefOverTime[0] = landscape[i][j].relativeProb;
 			}
 		}
 		
@@ -546,7 +546,7 @@ public class ProbabilisticSearch {
 		for(int i=0; i<dimension; i++) {
 			for(int j=0; j<dimension; j++) {
 					if(row!=i && col!=j) {
-						landscape[i][j].probBeliefOverTime[currentSearch] = landscape[i][j].relativeProb;
+						//landscape[i][j].probBeliefOverTime[currentSearch] = landscape[i][j].relativeProb;
 						landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1+((relProb*(1-probForFind)/overallProb)));
 						//landscape[i][j].relativeProb = (1.0-relProb*probForFind)*landscape[i][j].relativeProb/overallProb;
 						//given the target was not found in the searched cell
@@ -555,7 +555,7 @@ public class ProbabilisticSearch {
 					}
 			}
 		}
-		landscape[row][col].probBeliefOverTime[currentSearch] = landscape[row][col].relativeProb;
+		//landscape[row][col].probBeliefOverTime[currentSearch] = landscape[row][col].relativeProb;
 		landscape[row][col].relativeProb = relProb*(1-probForFind);
 	}
 	
@@ -568,14 +568,14 @@ public class ProbabilisticSearch {
 		char type;
 		double probForFind;
 		double relativeProb;
-		double[] probBeliefOverTime;
+		//double[] probBeliefOverTime;
 		boolean target;
 		
 		public CellDetails(char type, double prob, double relativeProb, boolean target) {
 			this.type = type;
 			this.probForFind = prob;
 			this.relativeProb = relativeProb;
-			probBeliefOverTime = new double[maximumSearchTime];
+			//probBeliefOverTime = new double[maximumSearchTime];
 			this.target = target;
 		}
 		
