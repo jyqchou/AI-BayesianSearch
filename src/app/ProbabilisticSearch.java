@@ -24,7 +24,6 @@ import java.util.Scanner;
 
 public class ProbabilisticSearch {
 
-	static boolean moving = true;
 	static CellDetails[][] landscape; //Data Structure containing the grid of land
 	static double[][] findingTargetProb;
 	static int dimension = 50; //length and width of the grid
@@ -38,7 +37,7 @@ public class ProbabilisticSearch {
 	
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
-		System.out.println("Enter 1 for Stationary Target, Enter 2 for Moving Target, Enter 3 for Simulation, Enter 4 for Current Location Search, Enter any other number to quit.");
+		System.out.println("Enter 1 for Stationary Target\nEnter 2 for Moving Target\nEnter 3 for Simulation\nEnter 4 for Current Location Search\nEnter any other number to quit.");
 		int option = in.nextInt();
 		int option2 = 0;
 		if (!(option == 1 || option == 2 || option == 3 || option == 4)){
@@ -177,10 +176,7 @@ public class ProbabilisticSearch {
 		} else if (option == 2) {
 			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
 				int[] XY;
-				if(moving)
-					XY = pickMovingNext();
-				else
-					XY = pickNext();
+				XY = pickMovingNext();
 				
 				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
 				if(chkLandscape(XY[0],XY[1])) {
@@ -560,7 +556,7 @@ public class ProbabilisticSearch {
 			}
 		}
 		landscape[row][col].probBeliefOverTime[currentSearch] = landscape[row][col].relativeProb;
-		landscape[row][col].relativeProb = relProb*probForFind;
+		landscape[row][col].relativeProb = relProb*(1-probForFind);
 	}
 	
 	/*
