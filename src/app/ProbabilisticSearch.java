@@ -19,7 +19,6 @@ C - Maze of Caves
 
 package app;
 
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ProbabilisticSearch {
@@ -30,7 +29,6 @@ public class ProbabilisticSearch {
 	static int rowTarget, colTarget; //row and column in which the target is located
 	static int maximumSearchTime = dimension*dimension*1000; //upperbound for maximum number of searches
 	static int currentSearch; //current search iteration
-	static String targetMove = "";
 	static int[] currentLocation;
 	static int distanceTraveled;
 	static int numTrials = 500;
@@ -188,8 +186,6 @@ public class ProbabilisticSearch {
 					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
 					System.out.println();
 					break;
-				} else {
-					reCalcProb(XY[0], XY[1]);
 				}
 				++currentSearch;
 			}	
@@ -332,15 +328,6 @@ public class ProbabilisticSearch {
 		for(int i=0; i<dimension; i++) {
 			for(int j=0; j<dimension; j++) {
 				double scale = landscape[i][j].probForFind;
-//				if (landscape[i][j].type == 'L') {
-//					scale = 0.9; 
-//				} else if (landscape[i][j].type == 'H') {
-//					scale = 0.7;
-//				} else if (landscape[i][j].type == 'F') {
-//					scale = 0.3;
-//				} else if (landscape[i][j].type == 'C') {
-//					scale = 0.1;
-//				}
 				findingTargetProb[i][j] = scale*landscape[i][j].relativeProb;
 				if(nextCell < findingTargetProb[i][j]) {
 					nextCell = findingTargetProb[i][j];
@@ -381,29 +368,123 @@ public class ProbabilisticSearch {
 				
 	}
 	
-	/*
-	 * Function to move the target and return the next cell
-	 */
+	public static int[] check() {
+		int[] XY = new int[2];
+		String move = move();
+		char type1 = move.split("-")[0].charAt(0);
+		char type2 = move.split("-")[1].charAt(0);
+		double count = 0.0;
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
+				if(landscape[i][j].type == type1 || landscape[i][j].type == type2) {
+					++count;
+				}
+			}
+		}
+		
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
+				if(landscape[i][j].type == type1 || landscape[i][j].type == type2) {
+					landscape[i][j].relativeProb = (double) (1.0/count);
+				} else {
+					landscape[i][j].relativeProb = 0.0;
+				}
+			}
+		}
+		
+		XY = pickNext();
+		
+		return XY;
+	}
+	
 	public static int[] pickMovingNext() {
 		int[] XY = new int[2];
 		String move = move();
-		XY = getNext(move);
+		
+		char type1 = move.split("-")[0].charAt(0);
+		char type2 = move.split("-")[1].charAt(0);
+		double extra = 0.0;
+		
+		for(int i=0; i<dimension; i++) {
+			for(int j=0; j<dimension; j++) {
+				double surroundings = 0.0;
+				
+				if(landscape[i][j].relativeProb != 0.0) {
+					
+					if(i>0 && (landscape[i-1][j].type == type1 || landscape[i-1][j].type == type2)) {
+						++surroundings;
+					}
+					if(i<dimension-1 && (landscape[i+1][j].type == type1 || landscape[i+1][j].type == type2)) {
+							++surroundings;				
+					}
+					if(j>0 && (landscape[i][j-1].type == type1 || landscape[i][j-1].type == type2)) {
+						++surroundings;
+					}
+					if(j<dimension-1 && (landscape[i][j+1].type == type1 || landscape[i][j+1].type == type2)) {
+						++surroundings;
+					}
+					
+					if(surroundings>0) {
+						if(i>0 && (landscape[i-1][j].type == type1 || landscape[i-1][j].type == type2)) {
+							landscape[i-1][j].relativeProb += landscape[i][j].relativeProb/surroundings;
+						}
+						if(i<dimension-1 && (landscape[i+1][j].type == type1 || landscape[i+1][j].type == type2)) {
+							landscape[i+1][j].relativeProb += landscape[i][j].relativeProb/surroundings;			
+						}
+						if(j>0 && (landscape[i][j-1].type == type1 || landscape[i][j-1].type == type2)) {
+							landscape[i][j-1].relativeProb += landscape[i][j].relativeProb/surroundings;
+						}
+						if(j<dimension-1 && (landscape[i][j+1].type == type1 || landscape[i][j+1].type == type2)) {
+							landscape[i][j+1].relativeProb += landscape[i][j].relativeProb/surroundings;
+						}
+						landscape[i][j].relativeProb = 0.0;
+					} else {
+						extra += landscape[i][j].relativeProb;
+						landscape[i][j].relativeProb = 0.0;
+					}
+					
+				}
+			}
+		}
+		
+		if(extra != 0.0) {
+			double nonEmptyCount = 0.0;
+			for(int i=0; i<dimension; i++) {
+				for(int j=0; j<dimension; j++) {
+					if(landscape[i][j].relativeProb != 0.0) {
+						++nonEmptyCount;
+					}
+				}
+			}
+			
+			for(int i=0; i<dimension; i++) {
+				for(int j=0; j<dimension; j++) {
+					if(landscape[i][j].relativeProb != 0.0) {
+						landscape[i][j].relativeProb = landscape[i][j].relativeProb*(1.0+(extra/nonEmptyCount));
+					}
+				}
+			}
+			
+		}
+		
+		XY = pickNext();
 		
 		return XY;
 	}
 	
 	/*
-	 * Function to get the next cell to search based on moving information
+	 * Function to move the target and return the next cell
 	 */
-	public static int[] getNext(String move) {
+	/*
+	public static int[] pickMovingNext() {
 		int[] XY = new int[2];
+		String move = move();
 		
 		if(targetMove == "") {
 			targetMove = move;
 		} else {
 			targetMove += "-"+move.split("-")[1];
 		}
-		System.out.println("Move "+move+"  -  "+targetMove);
 		String[] trackTarget = targetMove.split("-");
 		int i=0;
 		ArrayList<int[]> location = find(trackTarget[i]);
@@ -462,7 +543,7 @@ public class ProbabilisticSearch {
 		}
 		
 		return targetLoc;
-	}
+	}*/
 	
 	/*
 	 * Function to randomly move the target Cell & report the moves
