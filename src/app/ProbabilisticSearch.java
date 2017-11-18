@@ -42,14 +42,16 @@ public class ProbabilisticSearch {
 		if (!(option == 1 || option == 2 || option == 3 || option == 4)){
 			System.exit(0);
 		}
-		if (option == 1) {
+		if (option == 1 || option == 2) {
 			System.out.println("Enter 1 for Rule 1, Enter 2 for Rule 2, Enter any other number to quit.");
 			option2 = in.nextInt();
 		}
 		
-		if (option == 3){ //Simulate 100 grids for each Rule, calculate average number of searches
+		if (option == 3){ //Simulate 500 grids for each Rule, calculate average number of searches
 			int rule1Count = 0;
 			int rule2Count = 0;
+			int moveRule1Count = 0;
+			int moveRule2Count = 0;
 			int locationCount = 0;
 			int distanceCount = 0;
 			
@@ -70,7 +72,7 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Time: " + currentSearch);
+				System.out.println("Search Steps: " + currentSearch);
 				rule1Count = rule1Count + currentSearch;
 			}
 
@@ -93,11 +95,10 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Time: " + currentSearch);
+				System.out.println("Search Steps: " + currentSearch);
 				rule2Count = rule2Count + currentSearch;
 			}
 			
-			currentSearch = 1;
 			for (int i = 0; i<numTrials; i++) {
 				System.out.println("Location Based Action, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
@@ -118,15 +119,59 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Time + Distance Traveled = " + currentSearch + " + " + distanceTraveled + " = " + (currentSearch+distanceTraveled));
+				System.out.println("Search Steps + Distance Traveled = " + currentSearch + " + " + distanceTraveled + " = " + (currentSearch+distanceTraveled));
 				locationCount = locationCount + currentSearch;
 				distanceCount = distanceCount + distanceTraveled;
 				
 			}
 			
-			System.out.println("Rule 1 Average: " + (double)rule1Count/numTrials);
-			System.out.println("Rule 2 Average: " + (double)rule2Count/numTrials);
+			for (int i = 0; i<numTrials; i++) {
+				System.out.println("Moving Target Rule 1, iteration: " + (i+1));
+				landscape = new CellDetails[dimension][dimension];
+				populateLandscape();
+				currentSearch = 1;
+				findingTargetProb = new double[dimension][dimension];
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY = pickNext();
+					if(chkLandscape(XY[0],XY[1])) {
+						break;
+					} else {
+						pickMovingNext("type1");
+					}
+					++currentSearch;
+				}
+				
+				System.out.println("Search Steps: " + currentSearch);
+				moveRule1Count = moveRule1Count + currentSearch;
+			}
+			
+			for (int i = 0; i<numTrials; i++) {
+				System.out.println("Moving Target Rule 2, iteration: " + (i+1));
+				landscape = new CellDetails[dimension][dimension];
+				populateLandscape();
+				currentSearch = 1;
+				findingTargetProb = new double[dimension][dimension];
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY = pickNextRule2();
+					if(chkLandscape(XY[0],XY[1])) {
+						break;
+					} else {
+						pickMovingNext("type2");
+					}
+					++currentSearch;
+				}
+				
+				System.out.println("Search Steps: " + currentSearch);
+				moveRule2Count = moveRule2Count + currentSearch;
+			}
+			
+			System.out.println("Stationary Target Rule 1 Average: " + (double)rule1Count/numTrials);
+			System.out.println("Stationary Target Rule 2 Average: " + (double)rule2Count/numTrials);
 			System.out.println("Location Based Search Average: " + (double)locationCount/numTrials + " + " + (double)distanceCount/numTrials + " = "  +  ((double)locationCount/numTrials + (double)distanceCount/numTrials));
+			System.out.println("Moving Target Rule 1 Average: " + (double)moveRule1Count/numTrials);
+			System.out.println("Moving Target Rule 2 Average: " + (double)moveRule2Count/numTrials);
 			System.exit(0);
 			
 		} 
@@ -176,19 +221,36 @@ public class ProbabilisticSearch {
 			}
 			
 		} else if (option == 2) {
-			while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
-				int[] XY;
-				XY = pickMovingNext();
+			if(option2 == 1) {
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY;
+					XY = pickMovingNext("type1");
+					System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+					if(chkLandscape(XY[0],XY[1])) {
+						System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+						System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+						System.out.println();
+						break;
+					}
+					++currentSearch;
+				}	
+			} else if(option2 == 2) {
 				
-				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
-				if(chkLandscape(XY[0],XY[1])) {
-					System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
-					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
-					System.out.println();
-					break;
-				}
-				++currentSearch;
-			}	
+				findingTargetProb = new double[dimension][dimension];
+				
+				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
+					int[] XY;
+					XY = pickMovingNext("type2");
+					System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
+					if(chkLandscape(XY[0],XY[1])) {
+						System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
+						System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
+						System.out.println();
+						break;
+					}
+					++currentSearch;
+				}	
+			}
 		} else if (option == 4) {
 			currentLocation = new int[]{0, 0};
 			distanceTraveled = 0;
@@ -368,36 +430,7 @@ public class ProbabilisticSearch {
 				
 	}
 	
-	public static int[] check() {
-		int[] XY = new int[2];
-		String move = move();
-		char type1 = move.split("-")[0].charAt(0);
-		char type2 = move.split("-")[1].charAt(0);
-		double count = 0.0;
-		for(int i=0; i<dimension; i++) {
-			for(int j=0; j<dimension; j++) {
-				if(landscape[i][j].type == type1 || landscape[i][j].type == type2) {
-					++count;
-				}
-			}
-		}
-		
-		for(int i=0; i<dimension; i++) {
-			for(int j=0; j<dimension; j++) {
-				if(landscape[i][j].type == type1 || landscape[i][j].type == type2) {
-					landscape[i][j].relativeProb = (double) (1.0/count);
-				} else {
-					landscape[i][j].relativeProb = 0.0;
-				}
-			}
-		}
-		
-		XY = pickNext();
-		
-		return XY;
-	}
-	
-	public static int[] pickMovingNext() {
+	public static int[] pickMovingNext(String type) {
 		int[] XY = new int[2];
 		String move = move();
 		
@@ -467,7 +500,11 @@ public class ProbabilisticSearch {
 			
 		}
 		
-		XY = pickNext();
+		if(type == "type1") {
+			XY = pickNext();
+		} else {
+			XY = pickNextRule2();
+		}
 		
 		return XY;
 	}
@@ -616,7 +653,7 @@ public class ProbabilisticSearch {
 		rowTarget = tempRow; colTarget = tempCol;
 		landscape[rowTarget][colTarget].target = true;
 		char finalType = landscape[rowTarget][colTarget].type;
-		System.out.println("Moved :: "+(rowTarget+1)+"-"+(colTarget+1));
+		//System.out.println("Moved :: "+(rowTarget+1)+"-"+(colTarget+1));
 		return initialType+"-"+finalType;
 	}
 	
