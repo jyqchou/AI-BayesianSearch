@@ -59,7 +59,7 @@ public class ProbabilisticSearch {
 			
 			landMoves = 0; landCount = 0; hillMoves = 0; hillCount = 0; forestMoves = 0; forestCount = 0; caveMoves = 0; caveCount = 0;
 			for (int i = 0; i<numTrials; i++) {
-				//System.out.println("Rule 1, iteration: " + (i+1));
+				System.out.println("Rule 1, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
 				char type = populateLandscape();
 				currentSearch = 1;
@@ -100,7 +100,7 @@ public class ProbabilisticSearch {
 			currentSearch = 1;
 			landMoves = 0; landCount = 0; hillMoves = 0; hillCount = 0; forestMoves = 0; forestCount = 0; caveMoves = 0; caveCount = 0;
 			for (int i = 0; i< numTrials; i++) {
-				//System.out.println("Rule 2, iteration: " + (i+1));
+				System.out.println("Rule 2, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
 				char type = populateLandscape();
 				currentSearch = 1;
@@ -140,7 +140,7 @@ public class ProbabilisticSearch {
 			
 			landMoves = 0; landCount = 0; hillMoves = 0; hillCount = 0; forestMoves = 0; forestCount = 0; caveMoves = 0; caveCount = 0; landDist = 0; hillDist = 0; forestDist = 0; caveDist = 0;
 			for (int i = 0; i<numTrials; i++) {
-				//System.out.println("Location Based Action, iteration: " + (i+1));
+				System.out.println("Location Based Action, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
 				char type = populateLandscape();
 				currentSearch = 1;
@@ -301,19 +301,6 @@ public class ProbabilisticSearch {
 				}	
 			} else if(option2 == 2) {
 				
-//<<<<<<< HEAD
-//				System.out.println("Checking ... "+(XY[0]+1)+" - "+(XY[1]+1)+" Count: "+currentSearch);
-//				if(chkLandscape(XY[0],XY[1])) {
-//					System.out.println("Target Found !!!! @ Row - "+(XY[0]+1)+" & Col - "+(XY[1]+1)+" Count: "+currentSearch);
-//					System.out.println("Actual Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
-//					System.out.println();
-//					break;
-//				} else {
-//					reCalcProb(XY[0], XY[1]); //need to fix this
-//				}
-//				++currentSearch;
-//			}	
-//=======
 				findingTargetProb = new double[dimension][dimension];
 				
 				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
@@ -329,7 +316,6 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}	
 			}
-//>>>>>>> 340a661932aae7c1121120c820177081799e12b9
 		} else if (option == 4) {
 			currentLocation = new int[]{0, 0};
 			distanceTraveled = 0;
