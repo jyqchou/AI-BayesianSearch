@@ -28,7 +28,7 @@ public class ProbabilisticSearch {
 	static double[][] findingTargetProb;
 	static int dimension = 50; //length and width of the grid
 	static int rowTarget, colTarget; //row and column in which the target is located
-	static int maximumSearchTime = dimension*dimension*1000; //upperbound for maximum number of searches
+	static int maximumSearchTime = dimension*dimension*100; //upperbound for maximum number of searches
 	static int currentSearch; //current search iteration
 	static String targetMove = "";
 	static int[] currentLocation;
@@ -189,7 +189,7 @@ public class ProbabilisticSearch {
 					System.out.println();
 					break;
 				} else {
-					reCalcProb(XY[0], XY[1]);
+					reCalcProb(XY[0], XY[1]); //need to fix this
 				}
 				++currentSearch;
 			}	
