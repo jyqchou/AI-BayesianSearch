@@ -32,6 +32,8 @@ public class ProbabilisticSearch {
 	static int[] currentLocation;
 	static int distanceTraveled;
 	static int numTrials = 500;
+	static int landMoves = 0, landCount = 0, hillMoves = 0, hillCount = 0, forestMoves = 0, forestCount = 0, caveMoves = 0, caveCount = 0, landDist = 0, hillDist = 0, forestDist = 0, caveDist = 0;
+	static double landProb = 0.2, hillProb = 0.3, forestProb = 0.3, caveProb = 0.2;
 	
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
@@ -55,11 +57,11 @@ public class ProbabilisticSearch {
 			int locationCount = 0;
 			int distanceCount = 0;
 			
-			
+			landMoves = 0; landCount = 0; hillMoves = 0; hillCount = 0; forestMoves = 0; forestCount = 0; caveMoves = 0; caveCount = 0;
 			for (int i = 0; i<numTrials; i++) {
-				System.out.println("Rule 1, iteration: " + (i+1));
+				//System.out.println("Rule 1, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
-				populateLandscape();
+				char type = populateLandscape();
 				currentSearch = 1;
 				
 				while(currentSearch < maximumSearchTime) { //continues to search until target is found or 10000 cells searched
@@ -72,16 +74,35 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Steps: " + currentSearch);
+				if(type == 'L') {
+					++landCount;
+					landMoves += currentSearch;
+				} else if(type == 'H') {
+					++hillCount;
+					hillMoves += currentSearch;
+				} else if(type == 'F') {
+					++forestCount;
+					forestMoves += currentSearch;
+				} else {
+					++caveCount;
+					caveMoves += currentSearch;
+				}
+				
+				//System.out.println("Search Steps: " + currentSearch);
 				rule1Count = rule1Count + currentSearch;
 			}
-
-			currentSearch = 1;
+			System.out.println("\nStationary Target Rule 1 Average: \nLand : " + (double)landMoves/landCount+" Hill : " 
+			+ (double)hillMoves/hillCount+" Forest : " + (double)forestMoves/forestCount+" Cave : " + (double)caveMoves/caveCount);
+			System.out.println("Weighted Average for Rule 1 is : "
+			+(((double)landMoves/landCount)*landProb+((double)hillMoves/hillCount)*hillProb+((double)forestMoves/forestCount)*forestProb+((double)caveMoves/caveCount)*caveProb));
 			
+			
+			currentSearch = 1;
+			landMoves = 0; landCount = 0; hillMoves = 0; hillCount = 0; forestMoves = 0; forestCount = 0; caveMoves = 0; caveCount = 0;
 			for (int i = 0; i< numTrials; i++) {
-				System.out.println("Rule 2, iteration: " + (i+1));
+				//System.out.println("Rule 2, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
-				populateLandscape();
+				char type = populateLandscape();
 				currentSearch = 1;
 				findingTargetProb = new double[dimension][dimension];
 				
@@ -95,14 +116,33 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Steps: " + currentSearch);
+				if(type == 'L') {
+					++landCount;
+					landMoves += currentSearch;
+				} else if(type == 'H') {
+					++hillCount;
+					hillMoves += currentSearch;
+				} else if(type == 'F') {
+					++forestCount;
+					forestMoves += currentSearch;
+				} else {
+					++caveCount;
+					caveMoves += currentSearch;
+				}
+				//System.out.println("Search Steps: " + currentSearch);
 				rule2Count = rule2Count + currentSearch;
 			}
+			System.out.println("\nStationary Target Rule 2 Average: \nLand : " + (double)landMoves/landCount+" Hill : " 
+					+ (double)hillMoves/hillCount+" Forest : " + (double)forestMoves/forestCount+" Cave : " + (double)caveMoves/caveCount);
+			System.out.println("Weighted Average for Rule 2 is : "
+					+(((double)landMoves/landCount)*landProb+((double)hillMoves/hillCount)*hillProb+((double)forestMoves/forestCount)*forestProb+((double)caveMoves/caveCount)*caveProb));
 			
+			
+			landMoves = 0; landCount = 0; hillMoves = 0; hillCount = 0; forestMoves = 0; forestCount = 0; caveMoves = 0; caveCount = 0; landDist = 0; hillDist = 0; forestDist = 0; caveDist = 0;
 			for (int i = 0; i<numTrials; i++) {
-				System.out.println("Location Based Action, iteration: " + (i+1));
+				//System.out.println("Location Based Action, iteration: " + (i+1));
 				landscape = new CellDetails[dimension][dimension];
-				populateLandscape();
+				char type = populateLandscape();
 				currentSearch = 1;
 				currentLocation = new int[]{0, 0};
 				distanceTraveled = 0;
@@ -119,11 +159,36 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Steps + Distance Traveled = " + currentSearch + " + " + distanceTraveled + " = " + (currentSearch+distanceTraveled));
+				if(type == 'L') {
+					++landCount;
+					landMoves += currentSearch;
+					landDist += distanceTraveled;
+				} else if(type == 'H') {
+					++hillCount;
+					hillMoves += currentSearch;
+					hillDist += distanceTraveled;
+				} else if(type == 'F') {
+					++forestCount;
+					forestMoves += currentSearch;
+					forestDist += distanceTraveled;
+				} else {
+					++caveCount;
+					caveMoves += currentSearch;
+					caveDist += distanceTraveled;
+				}
+				
+				//System.out.println("Search Steps + Distance Traveled = " + currentSearch + " + " + distanceTraveled + " = " + (currentSearch+distanceTraveled));
 				locationCount = locationCount + currentSearch;
 				distanceCount = distanceCount + distanceTraveled;
-				
 			}
+			System.out.println("\nStationary Target Location Based Action Average for Number of Moves+Dist Travelled : \nLand : " + (double)(landMoves+landDist)/landCount+" Hill : " 
+					+ (double)(hillMoves+hillDist)/hillCount+" Forest : " + (double)(forestMoves+forestDist)/forestCount+" Cave : " + (double)(caveMoves+caveDist)/caveCount);
+			System.out.println("Weighted Average for Location Based Action for Number of Moves+Dist Travelled  is : "
+					+(((double)(landMoves+landDist)/landCount)*landProb+((double)(hillMoves+hillDist)/hillCount)*hillProb+((double)(forestMoves+forestDist)/forestCount)*forestProb+((double)(caveMoves+caveDist)/caveCount)*caveProb));
+			System.out.println("\nStationary Target Location Based Action Average for Number of Moves : \nLand : " + (double)landMoves/landCount+" Hill : " 
+					+ (double)hillMoves/hillCount+" Forest : " + (double)forestMoves/forestCount+" Cave : " + (double)caveMoves/caveCount);
+			System.out.println("Weighted Average for Location Based Action for Number of Moves is : "
+					+(((double)landMoves/landCount)*landProb+((double)hillMoves/hillCount)*hillProb+((double)forestMoves/forestCount)*forestProb+((double)caveMoves/caveCount)*caveProb));
 			
 			for (int i = 0; i<numTrials; i++) {
 				System.out.println("Moving Target Rule 1, iteration: " + (i+1));
@@ -142,7 +207,7 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Steps: " + currentSearch);
+				//System.out.println("Search Steps: " + currentSearch);
 				moveRule1Count = moveRule1Count + currentSearch;
 			}
 			
@@ -163,7 +228,7 @@ public class ProbabilisticSearch {
 					++currentSearch;
 				}
 				
-				System.out.println("Search Steps: " + currentSearch);
+				//System.out.println("Search Steps: " + currentSearch);
 				moveRule2Count = moveRule2Count + currentSearch;
 			}
 			
@@ -285,45 +350,43 @@ public class ProbabilisticSearch {
 	/*
 	 * Function to randomly populate the Grid of land, as well as randomly assign target
 	 */
-	public static void populateLandscape() {
+	public static char populateLandscape() {
 		char type;
 		double probForFind;
 		double relativeProb = (double)(1.0/(dimension*dimension));
 		rowTarget = (int) Math.floor(Math.random() * (dimension));
 		colTarget = (int) Math.floor(Math.random() * (dimension));
-		System.out.println("Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
-		int lCount = 0, hCount = 0, fCount = 0, cCount = 0;
+		//System.out.println("Target Location :: "+(rowTarget+1)+"-"+(colTarget+1));
 		for(int i = 0; i < dimension; i++) {
 			for(int j=0; j < dimension; j++) {
 				double rand = Math.random();
-				if(rand <= 0.2) {
+				if(rand <= landProb) {
 					type = 'L';	// Flat Land
-					probForFind = 0.9;
-					++lCount;
-				} else if(rand > 0.2 && rand <= 0.5) {
+					probForFind = 0.99;
+				} else if(rand > landProb && rand <= landProb+hillProb) {
 					type = 'H';	// Hilly Area
-					probForFind = 0.7;
-					++hCount;
-				} else if(rand > 0.5 && rand <= 0.8) {
+					probForFind = 0.9;
+				} else if(rand > landProb+hillProb && rand <= landProb+hillProb+forestProb) {
 					type = 'F';	// Forest
-					probForFind = 0.3;
-					++fCount;
+					probForFind = 0.1;
 				} else {
 					type = 'C';	// Caves and tunnels
-					probForFind = 0.1;
-					++cCount;
+					probForFind = 0.01;
 				}
 				
-				if(rowTarget == i && colTarget == j)
+				if(rowTarget == i && colTarget == j) {
 					landscape[i][j] = new CellDetails(type,probForFind,relativeProb,true);
-				else
+				} else {
 					landscape[i][j] = new CellDetails(type,probForFind,relativeProb,false);
+				}
 				
 				//landscape[i][j].probBeliefOverTime[0] = landscape[i][j].relativeProb;
 			}
 		}
 		
-		System.out.println("Count :: Flat Land - "+lCount+" Hilly - "+hCount+" Forest - "+fCount+" Caves "+cCount);
+		//System.out.println("Count :: Flat Land - "+lCount+" Hilly - "+hCount+" Forest - "+fCount+" Caves "+cCount);
+		
+		return landscape[rowTarget][colTarget].type;
 	}
 	
 	/*
